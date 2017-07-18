@@ -94,6 +94,28 @@ class File(object):
             if close_it:
                 stream.close()
 
+    def write(self, target, a):
+        """
+
+        :param target:
+        :param a:
+        :return:
+        """
+        stream, close_it = self._open(target, 'wb')
+
+        try:
+            self._write(stream, a)
+
+        finally:
+            if close_it:
+                stream.close()
+            else:
+                stream.flush()
+
+    @abstractmethod
+    def _write(self, stream, a):
+        pass
+
 
 class PositionsFile(File):
     def __init__(self, frequency=29.97, delimiter=','):
@@ -121,3 +143,6 @@ class PositionsFile(File):
         finally:
             if close_it:
                 stream.close()
+
+    def _write(self, stream, a):
+        raise NotImplementedError()
