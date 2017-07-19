@@ -20,7 +20,7 @@ class Clustering(object):
     A class implementing trajectory clustering. Based on [1] Clustering of Vehicle Trajectories (Stefan Atev)
     """
 
-    def __init__(self, alpha=0.88, w=2.0, std_nn=2, std_min=0.4, std_max=20.0):
+    def __init__(self, alpha=0.88, w=2.0, std_nn=2, std_min=0.4, std_max=20.0, distance=spatial.distance.euclidean):
         """
         Constructor
 
@@ -38,6 +38,7 @@ class Clustering(object):
         self.std_nn = std_nn
         self.std_min = std_min
         self.std_max = std_max
+        self.distance = distance
 
     def std(self, tidx):
         return self.std_devs[tidx]
@@ -45,6 +46,7 @@ class Clustering(object):
     def mod_haus_dist(self, t1idx, t2idx):
         """
         Computes modified Hausdorf distance.
+
         :param t1idx:
         :param t2idx:
         :return:
@@ -217,7 +219,7 @@ class Clustering(object):
                 # k-means clustering of the row vectors of r
                 cb, wc_scatt = kmeans(r, g, iter=20, thresh=1e-05)  # cb = codebook (centroids = rows of cb)
 
-                # compute distortion score rho_g (withit class scatter /  sum(within class scatter, total scatter))
+                # compute distortion score rho_g (within class scatter /  sum(within class scatter, total scatter))
                 tot_scatt = np.sum([np.linalg.norm(r - c) for r in r for c in cb])
                 rhog[g - g_min] = wc_scatt / (tot_scatt - wc_scatt) if (tot_scatt - wc_scatt) else 0
 
@@ -227,26 +229,26 @@ class Clustering(object):
         print("Number of centroids = %d" % g)
 
         # Perform classification of trajectories using k-means clustering
+        self._kmean_cluster(trajectories, g, evec)
+
+    def _kmean_cluster(self, trajectories, g, evec):
         v = np.copy(evec[:, 0:g])
         s = np.diag(1.0 / np.sqrt(np.sum(np.multiply(v, v), 1)))
         r = np.dot(s, v)
-
         # Find g initial centroids (rows)
         init_centroids = np.zeros((g, r.shape[1]))
         # Matrix of distance of each observation (rows) to each initial centroid (columns)
         init_centroids_dist = np.zeros((r.shape[0], g))
-
         init_centroids[0] = r[random.randint(0, r.shape[0] - 1)]
+
         for i in range(g - 1):
             # get each observation's distance to the new centroid
-            init_centroids_dist[:, i] = [spatial.distance.euclidean(obs, init_centroids[i]) for obs in r]
-
+            init_centroids_dist[:, i] = [self.distance(obs, init_centroids[i]) for obs in r]
             # get the observation which has the worst minimal distance to some already existing centroid
             newidx = np.argmax(np.min(init_centroids_dist[:, :(i + 1)], 1))
             init_centroids[i + 1] = r[newidx]
 
         centroids, labels = kmeans2(r, init_centroids, iter=10, thresh=1e-05, minit='matrix', missing='warn')
-
         assert (len(trajectories) == len(labels))
 
         for trajLab in zip(trajectories, labels):
