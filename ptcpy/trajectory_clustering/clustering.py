@@ -64,7 +64,6 @@ class Clustering(object):
             # Find corresponding point pt2 in t2 for point pt1 = t1[i]
             pt2idx = np.argmin(
                 np.array([abs(t1_points_rel_pos[i] - t2_points_rel_pos[j]) for j in range(len(t2_points_rel_pos))]))
-            pt2 = t2.get_points()[pt2idx]
 
             # Get set of points sp2 of t2 within neighborhood of point pt2
             ps = t2.get_prefix_sum()
@@ -83,7 +82,6 @@ class Clustering(object):
         # Find distance worse then self.alpha percent of the other distance
         distances = np.sort(distances)
 
-        #         return distances[int(round((len(distances) - 1) * self.alpha))]
         return distances[min(int(len(distances) * self.alpha), len(distances) - 1)]
 
     def create_distance_matrix(self):
@@ -115,7 +113,7 @@ class Clustering(object):
         return math.exp(
             -(self.dist_mat[t1idx, t2idx] * self.dist_mat[t2idx, t1idx]) / (2 * self.std(t1idx) * self.std(t2idx)))
 
-    def cluster_agglomerartive(self, trajectories, cn):
+    def cluster_agglomerative(self, trajectories, cn):
         """
         The function performs agglomerative clustering of trajectories
         and for each trajectory sets an index t.ci denoting estimated cluster.
@@ -179,11 +177,7 @@ class Clustering(object):
 
         self.create_std_devs()
 
-        # Compute affinity matrix
-        k = np.zeros((len(trajectories), len(trajectories)))
-        for r in range(len(trajectories)):
-            for c in range(len(trajectories)):
-                k[r, c] = self.similarity(r, c)
+        k = self._affinity_matrix(trajectories)
 
         # Diagonal matrix w for normalization
         w = np.diag(1.0 / np.sqrt(np.sum(k, 1)))
@@ -207,31 +201,59 @@ class Clustering(object):
 
         g = clusters
         if g == -1:
-            # Estimate the number of clusters
-            # Distortion scores for different number of clusters g
-            rhog = np.zeros(g_max - g_min + 1)
-
-            for g in range(g_min, g_max + 1):
-                v = np.copy(evec[:, 0:g])
-                s = np.diag(1.0 / np.sqrt(np.sum(np.multiply(v, v), 1)))
-                r = np.dot(s, v)
-
-                # k-means clustering of the row vectors of r
-                cb, wc_scatt = kmeans(r, g, iter=20, thresh=1e-05)  # cb = codebook (centroids = rows of cb)
-
-                # compute distortion score rho_g (within class scatter /  sum(within class scatter, total scatter))
-                tot_scatt = np.sum([np.linalg.norm(r - c) for r in r for c in cb])
-                rhog[g - g_min] = wc_scatt / (tot_scatt - wc_scatt) if (tot_scatt - wc_scatt) else 0
-
-            # Best number of centroids.
-            g = g_min + np.argmin(rhog)
+            g = self._estimate_cluster_number(evec, g_max, g_min)
 
         print("Number of centroids = %d" % g)
 
-        # Perform classification of trajectories using k-means clustering
         self._kmean_cluster(trajectories, g, evec)
 
+    def _affinity_matrix(self, trajectories):
+        """
+        Computes the affinity matrix for the trajectories
+        :param trajectories:
+        :return:
+        """
+        k = np.zeros((len(trajectories), len(trajectories)))
+        for r in range(len(trajectories)):
+            for c in range(len(trajectories)):
+                k[r, c] = self.similarity(r, c)
+
+        return k
+
+    @staticmethod
+    def _estimate_cluster_number(evec, g_max, g_min):
+        """
+        Determines the optimal number of cluster using the eigenvectors and
+        :param evec: Eigenvectors
+        :param g_max: max number of clusters
+        :param g_min: min number of cluster
+        :return:
+        """
+        rhog = np.zeros(g_max - g_min + 1)
+        for g in range(g_min, g_max + 1):
+            v = np.copy(evec[:, 0:g])
+            s = np.diag(1.0 / np.sqrt(np.sum(np.multiply(v, v), 1)))
+            r = np.dot(s, v)
+
+            # k-means clustering of the row vectors of r
+            cb, wc_scatt = kmeans(r, g, iter=20, thresh=1e-05)  # cb = codebook (centroids = rows of cb)
+
+            # compute distortion score rho_g (within class scatter /  sum(within class scatter, total scatter))
+            tot_scatt = np.sum([np.linalg.norm(r - c) for r in r for c in cb])
+            rhog[g - g_min] = wc_scatt / (tot_scatt - wc_scatt) if (tot_scatt - wc_scatt) else 0
+
+        # Best number of centroids.
+        g = g_min + np.argmin(rhog)
+        return g
+
     def _kmean_cluster(self, trajectories, g, evec):
+        """
+        Performs classification of trajectories using k-means clustering
+        :param trajectories:
+        :param g:
+        :param evec:
+        :return:
+        """
         v = np.copy(evec[:, 0:g])
         s = np.diag(1.0 / np.sqrt(np.sum(np.multiply(v, v), 1)))
         r = np.dot(s, v)

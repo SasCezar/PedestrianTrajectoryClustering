@@ -1,5 +1,7 @@
 import csv
+import os
 from abc import abstractmethod
+from itertools import chain
 
 from six import string_types
 
@@ -31,13 +33,42 @@ def positions2trajectories(positions):
             y_pos = pedestrian[3]
             trajectories.setdefault(pedestrian_id, Trajectory(pedestrian_id)).add_point((x_pos, y_pos))
 
-    return trajectories.values()
+    return trajectories
+
+
+def postions2traclus(source, destination, frequency=29.97):
+    positions = position_read(source, frequency)
+    trajectories = positions2trajectories(positions).values()
+    num_traj = len(trajectories)
+
+    # with open(destination, "w", encoding="utf8", newline="") as outf:
+    with open(destination, "w") as outf:
+        outf.write("2")
+        outf.write(os.linesep)
+        outf.write(str(num_traj))
+        outf.write(os.linesep)
+
+        for traj in trajectories:
+            positions = [x + 500 for x in list(chain.from_iterable(traj.get_points()))]
+            line = str(traj.get_id()) + " " + str(int((len(positions) / 2)) - 1) + " " + " ".join(
+                map(str, positions)) + " "
+            outf.write(line)
+            outf.write(os.linesep)
 
 
 def trajectories_read(source, frequency=29.97):
     positions = position_read(source, frequency)
     trajectory_matrix = positions2trajectories(positions)
     return trajectory_matrix
+
+
+def trajectories2file(samples, trajectories, destination):
+    with open(destination, "wb") as outf:
+        csvwriter = csv.writer(outf)
+        for time in sorted(samples.keys()):
+            for position in samples[time]:
+                clustered_position = [time] + list(position) + [trajectories[position[0]]]
+                csvwriter.writerow(clustered_position)
 
 
 class File(object):
@@ -82,7 +113,6 @@ class File(object):
         """
         Reads the content of a positions file
         :param source: str or file-like object containing the positions
-        :param mode: Defines the data structure to be used for the output
         :return: A dictionary or a matrix, based on the `mode` parameter
         """
         stream, close_it = self._open(source)
@@ -146,3 +176,12 @@ class PositionsFile(File):
 
     def _write(self, stream, a):
         raise NotImplementedError()
+
+
+"""
+    DATA_PATH = "C:\\Users\\sasce\\Desktop\\dataset"
+    file = '3_3_A.csv'
+    #trajectories = trajectories_read(path.join(DATA_PATH, file))
+    OUT_PATH = "C:\\Users\\sasce\\IdeaProjects\\TraClusAlgorithm\\src"
+    postions2traclus(path.join(DATA_PATH, file), path.join(OUT_PATH, file.replace(".csv", ".tra")))
+"""

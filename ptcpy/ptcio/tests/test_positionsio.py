@@ -1,7 +1,7 @@
 import unittest
 from os import path
 
-from ptcpy.io.positionsio import position_read, trajectories_read
+from ptcpy.ptcio.positionsio import position_read, trajectories_read
 
 DATA_PATH = path.join(path.dirname(__file__), 'data')
 

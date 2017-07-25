@@ -1,7 +1,10 @@
+import io
 from Tkinter import *
 from os import path
 
-from ptcpy.io.positionsio import trajectories_read
+from PIL import Image
+
+from ptcpy.ptcio.positionsio import trajectories_read, position_read, trajectories2file
 from ptcpy.trajectory_clustering.clustering import Clustering
 
 COLORS = ["#FF0000",  # red
@@ -21,10 +24,15 @@ COLORS = ["#FF0000",  # red
           "#FFFFFF"]  # white
 
 
+
 if __name__ == "__main__":
-    # DATA_PATH = "C:\\Users\\sasce\\PycharmProjects\\PedestrianTrajectoryClustering\\ptcpy\\io\\tests\\data\\"
+    # DATA_PATH = "C:\\Users\\sasce\\PycharmProjects\\PedestrianTrajectoryClustering\\ptcpy\\ptcio\\tests\\data\\"
     DATA_PATH = "C:\\Users\\sasce\\Desktop\\dataset"
-    trajectories = trajectories_read(path.join(DATA_PATH, '4_2_A.csv'))
+    file = '3_3_A.csv'
+    positions = position_read(path.join(DATA_PATH, file))
+    trajectories = trajectories_read(path.join(DATA_PATH, file)).values()
+    OUT_PATH = "C:\\Users\\sasce\\Desktop\\dataset\\traclus"
+    # postions2traclus(path.join(DATA_PATH, file), path.join(OUT_PATH, file))
 
     clust = Clustering()
     clust.cluster_spectral(trajectories)
@@ -40,5 +48,15 @@ if __name__ == "__main__":
 
     for t in trajectories:
         t.draw(w, COLORS[t.get_cluster_idx()], y_offset=250)
+
+    trajectories_dict = {}
+    for t in trajectories:
+        trajectories_dict[t.get_id()] = t.get_cluster_idx()
+
+    ps = w.postscript(colormode='color')
+    img = Image.open(io.BytesIO(ps.encode('utf-8')))
+    img.save('test.jpg')
+
+    trajectories2file(positions, trajectories_dict, path.join(OUT_PATH, file))
 
     mainloop()

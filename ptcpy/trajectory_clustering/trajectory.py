@@ -23,7 +23,6 @@ class Trajectory(object):
             self.prefix_sum.append(self.prefix_sum[len(self.prefix_sum) - 1] +
                                    self.distance(p, self.points[len(self.points) - 1]))
 
-        # add point
         self.points.append(p)
 
     def get_id(self):
@@ -45,7 +44,7 @@ class Trajectory(object):
         return self.prefix_sum[len(self.prefix_sum) - 1]
 
     def draw(self, widget, color, x_offset=0, y_offset=0):
-        xlast, ylast = None, None
+        x_last, y_last = None, None
         for p in self.points:
             # paint a point
             x = p[0] + x_offset
@@ -53,10 +52,10 @@ class Trajectory(object):
             widget.create_oval(x - 2, y - 2, x + 2, y + 2, fill=color)
 
             # paint a line
-            if xlast is not None and ylast is not None:
-                widget.create_line(xlast, ylast, x, y, smooth=True)
-            xlast = x
-            ylast = y
+            if x_last is not None and y_last is not None:
+                widget.create_line(x_last, y_last, x, y, smooth=True)
+            x_last = x
+            y_last = y
 
     def __str__(self):
         out = "=== Trajectory ===\n"
