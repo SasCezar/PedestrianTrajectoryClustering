@@ -11,8 +11,7 @@ import numpy as np
 from scipy import spatial
 from scipy.cluster.vq import kmeans
 from scipy.cluster.vq import kmeans2
-
-from ptcpy.trajectory_clustering.common import euclid_dist
+from trajectory_clustering.common import euclid_dist
 
 
 class Clustering(object):
@@ -92,7 +91,6 @@ class Clustering(object):
             for c in range(size):
                 dist = self.mod_haus_dist(r, c)
                 self.dist_mat[r, c] *= dist
-                #                 self.dist_mat[c, r] *= dist
 
     def create_std_devs(self):
         row_sorted_dist_mat = np.copy(self.dist_mat)
@@ -223,7 +221,7 @@ class Clustering(object):
     @staticmethod
     def _estimate_cluster_number(evec, g_max, g_min):
         """
-        Determines the optimal number of cluster using the eigenvectors and
+        Determines the optimal number of cluster using the eigenvectors
         :param evec: Eigenvectors
         :param g_max: max number of clusters
         :param g_min: min number of cluster

@@ -4,8 +4,7 @@ from abc import abstractmethod
 from itertools import chain
 
 from six import string_types
-
-from ptcpy.trajectory_clustering.trajectory import Trajectory
+from trajectory_clustering.trajectory import Trajectory
 
 
 def position_read(source, frequency=29.97):
@@ -31,7 +30,9 @@ def positions2trajectories(positions):
             pedestrian_id = pedestrian[0]
             x_pos = pedestrian[2]
             y_pos = pedestrian[3]
-            trajectories.setdefault(pedestrian_id, Trajectory(pedestrian_id)).add_point((x_pos, y_pos))
+            direction = 1 if pedestrian[1] in [3, 4] else -1
+            trajectories.setdefault(pedestrian_id, Trajectory(pedestrian_id, direction=direction)).add_point(
+                (x_pos, y_pos))
 
     return trajectories
 
@@ -75,15 +76,15 @@ class File(object):
     @staticmethod
     def _open(filespec, mode='rt'):
         """
-        :param filespec: str or file-like
-            String giving file name or file-like object
+        :param filespec: str or file_name-like
+            String giving file_name name or file_name-like object
         :param mode:  str, optional
-            Mode with which to open file, if `filespec` is a file name.
+            Mode with which to open file_name, if `filespec` is a file_name name.
         :return:
-            fobj : file-like
-                Open file-like object.
+            fobj : file_name-like
+                Open file_name-like object.
             close_it : bool
-                True if the calling function should close this file when done, false otherwise.
+                True if the calling function should close this file_name when done, false otherwise.
         """
 
         close_it = False
@@ -103,7 +104,7 @@ class File(object):
     @abstractmethod
     def _read(self, stream):
         """
-        Defines how to read the file
+        Defines how to read the file_name
         :param stream:
         :return:
         """
@@ -111,8 +112,8 @@ class File(object):
 
     def read(self, source):
         """
-        Reads the content of a positions file
-        :param source: str or file-like object containing the positions
+        Reads the content of a positions file_name
+        :param source: str or file_name-like object containing the positions
         :return: A dictionary or a matrix, based on the `mode` parameter
         """
         stream, close_it = self._open(source)
@@ -155,7 +156,7 @@ class PositionsFile(File):
     def _read(self, source):
         """
         Reads the input source and generates a dictionary containing the measures grouped by time (dictionary key)
-        :param source:  str or file-like object containing the positions
+        :param source:  str or file_name-like object containing the positions
         :return: A dictionary
         """
         stream, close_it = self._open(source)
@@ -176,12 +177,3 @@ class PositionsFile(File):
 
     def _write(self, stream, a):
         raise NotImplementedError()
-
-
-"""
-    DATA_PATH = "C:\\Users\\sasce\\Desktop\\dataset"
-    file = '3_3_A.csv'
-    #trajectories = trajectories_read(path.join(DATA_PATH, file))
-    OUT_PATH = "C:\\Users\\sasce\\IdeaProjects\\TraClusAlgorithm\\src"
-    postions2traclus(path.join(DATA_PATH, file), path.join(OUT_PATH, file.replace(".csv", ".tra")))
-"""

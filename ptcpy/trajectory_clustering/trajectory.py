@@ -4,17 +4,18 @@ Created on 24. 4. 2015
 @author: janbednarik
 """
 
-from ptcpy.trajectory_clustering.common import euclid_dist
+from trajectory_clustering.common import euclid_dist
 
 
 class Trajectory(object):
     """A class implementing one trajectory"""
 
-    def __init__(self, id, distance=euclid_dist):
+    def __init__(self, id, direction=None, distance=euclid_dist):
         self.id = id
         self.points = []
         self.ci = -1
         self.distance = distance
+        self.direction = direction
         self.prefix_sum = [0.0]
 
     def add_point(self, p):
@@ -43,7 +44,7 @@ class Trajectory(object):
     def length(self):
         return self.prefix_sum[len(self.prefix_sum) - 1]
 
-    def draw(self, widget, color, x_offset=0, y_offset=0):
+    def draw_plot(self, widget, color, x_offset=0, y_offset=0):
         x_last, y_last = None, None
         for p in self.points:
             # paint a point
@@ -54,6 +55,27 @@ class Trajectory(object):
             # paint a line
             if x_last is not None and y_last is not None:
                 widget.create_line(x_last, y_last, x, y, smooth=True)
+            x_last = x
+            y_last = y
+
+    def draw_img(self, img, color, x_offset=0, y_offset=0, scaling=1, frequency=1):
+        x_last, y_last = None, None
+        i = 1
+        for p in self.points:
+            # paint a point
+            x = (p[0] + x_offset) * scaling
+            y = (p[1] + y_offset) * scaling
+
+            i += 1
+            if not i % frequency:
+                img.polygon([(x + (3 * self.direction), y), (x - (3 * self.direction), y - 3),
+                             (x - (3 * self.direction), y + 3)], fill=color)
+                i += 1
+            # img.ellipse((x - 3, y - 3, x + 3, y + 3), fill=color)
+
+            # paint a line
+            if x_last is not None and y_last is not None:
+                img.line([(x_last, y_last), (x, y)], fill=color)
             x_last = x
             y_last = y
 
