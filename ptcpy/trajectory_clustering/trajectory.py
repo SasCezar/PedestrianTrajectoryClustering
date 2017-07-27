@@ -4,7 +4,7 @@ Created on 24. 4. 2015
 @author: janbednarik
 """
 
-from trajectory_clustering.common import euclid_dist
+from common import euclid_dist
 
 
 class Trajectory(object):
@@ -19,7 +19,6 @@ class Trajectory(object):
         self.prefix_sum = [0.0]
 
     def add_point(self, p):
-        # compute prefix sum
         if len(self.points) > 0:
             self.prefix_sum.append(self.prefix_sum[len(self.prefix_sum) - 1] +
                                    self.distance(p, self.points[len(self.points) - 1]))
@@ -44,25 +43,10 @@ class Trajectory(object):
     def length(self):
         return self.prefix_sum[len(self.prefix_sum) - 1]
 
-    def draw_plot(self, widget, color, x_offset=0, y_offset=0):
-        x_last, y_last = None, None
-        for p in self.points:
-            # paint a point
-            x = p[0] + x_offset
-            y = p[1] + y_offset
-            widget.create_oval(x - 2, y - 2, x + 2, y + 2, fill=color)
-
-            # paint a line
-            if x_last is not None and y_last is not None:
-                widget.create_line(x_last, y_last, x, y, smooth=True)
-            x_last = x
-            y_last = y
-
     def draw_img(self, img, color, x_offset=0, y_offset=0, scaling=1, frequency=1):
         x_last, y_last = None, None
         i = 1
         for p in self.points:
-            # paint a point
             x = (p[0] + x_offset) * scaling
             y = (p[1] + y_offset) * scaling
 
@@ -71,11 +55,10 @@ class Trajectory(object):
                 img.polygon([(x + (3 * self.direction), y), (x - (3 * self.direction), y - 3),
                              (x - (3 * self.direction), y + 3)], fill=color)
                 i += 1
-            # img.ellipse((x - 3, y - 3, x + 3, y + 3), fill=color)
 
-            # paint a line
             if x_last is not None and y_last is not None:
                 img.line([(x_last, y_last), (x, y)], fill=color)
+
             x_last = x
             y_last = y
 

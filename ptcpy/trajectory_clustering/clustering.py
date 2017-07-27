@@ -11,7 +11,8 @@ import numpy as np
 from scipy import spatial
 from scipy.cluster.vq import kmeans
 from scipy.cluster.vq import kmeans2
-from trajectory_clustering.common import euclid_dist
+
+from common import euclid_dist
 
 
 class Clustering(object):
