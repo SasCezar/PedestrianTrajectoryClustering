@@ -14,12 +14,13 @@ tkv = False
 png = True
 heatmap = True
 
+RESULT_OUT = "../results/trajectories"
 
 def visualize():
     if png:
         out_img = file_name.replace("csv", "png")
         im = draw_trajectories(trajectories, canvas_width, canvas_height, scaling=3, frequency=10)
-        im.save(out_img)
+        im.save(path.join(RESULT_OUT, out_img))
     if heatmap:
         heat_map(trajectories)
 
