@@ -10,13 +10,14 @@ from common import euclid_dist
 class Trajectory(object):
     """A class implementing one trajectory"""
 
-    def __init__(self, id, direction=None, distance=euclid_dist):
+    def __init__(self, id, direction=None, distance=euclid_dist, group_member=False):
         self.id = id
         self.points = []
         self.ci = -1
         self.distance = distance
         self.direction = direction
         self.prefix_sum = [0.0]
+        self.group_member = group_member
 
     def add_point(self, p):
         if len(self.points) > 0:

@@ -16,6 +16,7 @@ heatmap = True
 
 RESULT_OUT = "../results/trajectories"
 
+
 def visualize():
     if png:
         out_img = file_name.replace("csv", "png")

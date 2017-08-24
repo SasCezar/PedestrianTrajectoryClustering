@@ -31,8 +31,9 @@ def positions2trajectories(positions):
             x_pos = pedestrian[2]
             y_pos = pedestrian[3]
             direction = 1 if pedestrian[1] in [3, 4] else -1
-            trajectories.setdefault(pedestrian_id, Trajectory(pedestrian_id, direction=direction)).add_point(
-                (x_pos, y_pos))
+            group_member = 1 if pedestrian[1] in [2, 4] else 0
+            trajectories.setdefault(pedestrian_id, Trajectory(pedestrian_id, direction=direction,
+                                                              group_member=group_member)).add_point((x_pos, y_pos))
 
     return trajectories
 
