@@ -1,7 +1,15 @@
+import glob
+import os
+import subprocess
+from os import path
+
+import matplotlib
 import numpy as np
 from PIL import Image, ImageDraw
 from matplotlib import pyplot as plt
 from scipy.stats import gaussian_kde
+
+from ptcpy.ptcio.positionsio import position_read
 
 COLORS = ["#FF0000",  # red
           "#00FF00",  # lime
@@ -54,3 +62,61 @@ def heat_map(trajectories):
     plt.show()
     plt.clf()
     plt.close()
+
+
+def pedestrian_plot(positions, out_path):
+    matplotlib.use('Agg')
+    i = 0
+    for time in sorted(positions.keys()):
+        i += 1
+        print(time)
+        xs = []
+        ys = []
+        labels = []
+        for pedestrian in positions[time]:
+            xs += [pedestrian[2]]
+            ys += [pedestrian[3]]
+            labels += [pedestrian[0]]
+
+        plt.scatter(xs, ys)
+
+        for label, x, y in zip(labels, xs, ys):
+            plt.annotate(
+                label,
+                xy=(x, y), xytext=(0, 0),
+                textcoords='offset points', ha='center', va='center',
+                bbox=dict(boxstyle='circle,pad=0.5', fc='yellow', alpha=1))
+
+        plt.xlim(-500, 500)
+        plt.ylim(-200, 200)
+        plt.savefig(path.join(out_path, "frame_%05d.png" % int(i)))
+        plt.clf()
+
+
+def create_video(in_path, out_file, framerate):
+    os.chdir(in_path)
+    subprocess.call(['ffmpeg', "-y", '-framerate', str(framerate), '-i', 'frame_%05d.png',
+                     '-r', str(framerate), '-pix_fmt', 'yuv420p', str(out_file)])
+
+    for file_name in glob.glob(path.join(in_path, "*.png")):
+        os.remove(file_name)
+
+
+def _make_video():
+    DATA_PATH = "c:/Users/sasce/Desktop/dataset"
+    IMAGES = "c:/Users/sasce/Desktop/dataset/video"
+
+    for x in range(3, 7):
+        for l in ["A", "B", "C", "D"]:
+            c = 6 - x
+            file_name = str(x) + '_' + str(c) + '_' + str(l) + '.csv'
+
+            VIDEO_OUT = file_name[:-4] + ".mp4"
+            positions = position_read(path.join(DATA_PATH, file_name), 29.97)
+
+            pedestrian_plot(positions, IMAGES)
+
+            create_video(IMAGES, VIDEO_OUT, 29.97)
+
+
+_make_video()

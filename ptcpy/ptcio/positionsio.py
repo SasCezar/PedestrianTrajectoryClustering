@@ -3,8 +3,10 @@ import os
 from abc import abstractmethod
 from itertools import chain
 
+import numpy
 from six import string_types
-from trajectory_clustering.trajectory import Trajectory
+
+from ptcpy.trajectory_clustering.trajectory import Trajectory
 
 
 def position_read(source, frequency=29.97):
@@ -21,6 +23,23 @@ def _get_pedestrian_ids(positions):
     pedestrian_id = [item[0] for sublist in positions.values() for item in sublist]
     ids = list(set(pedestrian_id))
     return sorted(ids)
+
+
+def positions2matrix(source, frequency=29.97, axis=1):
+    positions = position_read(source, frequency)
+    num_sample = len(positions)
+    num_pedestrian = _get_pedestrian_number(positions)
+
+    points = numpy.zeros(shape=(num_sample, num_pedestrian))
+
+    for time in positions:
+        int_time = int(time * frequency)
+        for position in positions[time]:
+            pedestrian_id = position[0] - 1
+            point = position[axis + 2]
+            points[int_time][pedestrian_id] = point
+
+    return points
 
 
 def positions2trajectories(positions):
@@ -176,5 +195,5 @@ class PositionsFile(File):
             if close_it:
                 stream.close()
 
-    def _write(self, stream, a):
-        raise NotImplementedError()
+    def _write(self, stream, points):
+        pass

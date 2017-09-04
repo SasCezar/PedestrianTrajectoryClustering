@@ -1,6 +1,8 @@
 from os import path
 
-from ptcio.positionsio import trajectories_read, position_read, trajectories2file
+import numpy
+
+from ptcio.positionsio import trajectories_read, position_read, trajectories2file, positions2matrix
 from ptcpy.ptcio.visualization import draw_trajectories, heat_map
 from trajectory_clustering.clustering import Clustering
 
@@ -27,6 +29,7 @@ def visualize():
 
 
 if __name__ == "__main__":
+
     trajectories = trajectories_read(path.join(DATA_PATH, file_name)).values()
 
     clust = Clustering(alpha=0.95)
@@ -40,3 +43,7 @@ if __name__ == "__main__":
 
     positions = position_read(path.join(DATA_PATH, file_name))
     trajectories2file(positions, trajectories_dict, path.join(OUT_PATH, file_name))
+
+    POINTS_OUT = "c:/Users/sasce/Desktop/dataset/points"
+    points = positions2matrix(path.join(DATA_PATH, file_name))
+    numpy.savetxt(path.join(POINTS_OUT, "Y_POINTS_" + file_name), points, fmt="%s")
