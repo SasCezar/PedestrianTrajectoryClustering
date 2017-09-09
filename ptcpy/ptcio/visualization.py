@@ -30,7 +30,7 @@ def draw_trajectories(trajectories, canvas_width, canvas_height, scaling, freque
     for t in trajectories:
         t.draw_img(draw, COLORS[t.get_cluster_idx()], y_offset=250, scaling=scaling, frequency=frequency)
 
-    return im
+    return im.transpose(Image.FLIP_LEFT_RIGHT).transpose(Image.FLIP_TOP_BOTTOM)
 
 
 def list_points(trajectories):
@@ -102,11 +102,11 @@ def create_video(in_path, out_file, framerate):
         os.remove(file_name)
 
 
-def _make_video():
+def create_labeled_videos():
     DATA_PATH = "c:/Users/sasce/Desktop/dataset"
     IMAGES = "c:/Users/sasce/Desktop/dataset/video"
 
-    for x in range(3, 7):
+    for x in range(4, 7):
         for l in ["A", "B", "C", "D"]:
             c = 6 - x
             file_name = str(x) + '_' + str(c) + '_' + str(l) + '.csv'
@@ -118,5 +118,4 @@ def _make_video():
 
             create_video(IMAGES, VIDEO_OUT, 29.97)
 
-
-_make_video()
+# create_labeled_videos()
