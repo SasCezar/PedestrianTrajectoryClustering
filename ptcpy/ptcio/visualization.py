@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw
 from matplotlib import pyplot as plt
 from scipy.stats import gaussian_kde
 
-from ptcpy.ptcio.positionsio import position_read
+from ptcpy.ptcio.positionsio import gorrini_read
 
 COLORS = ["#FF0000",  # red
           "#00FF00",  # lime
@@ -24,11 +24,11 @@ COLORS = ["#FF0000",  # red
           "#C0C0C0"]  # silver
 
 
-def draw_trajectories(trajectories, canvas_width, canvas_height, scaling, frequency):
+def draw_trajectories(trajectories, canvas_width, canvas_height, scaling, frequency, y_offset=250):
     im = Image.new("RGB", (canvas_width * scaling, canvas_height * scaling), "white")
     draw = ImageDraw.Draw(im)
     for t in trajectories:
-        t.draw_img(draw, COLORS[t.get_cluster_idx()], y_offset=250, scaling=scaling, frequency=frequency)
+        t.draw_img(draw, COLORS[t.get_cluster_idx()], y_offset=y_offset, scaling=scaling, frequency=frequency)
 
     return im.transpose(Image.FLIP_LEFT_RIGHT).transpose(Image.FLIP_TOP_BOTTOM)
 
@@ -59,9 +59,7 @@ def heat_map(trajectories):
 
     ax1.set_xlim(min(x), max(x))
     ax1.set_ylim(min(y), max(y))
-    plt.show()
-    plt.clf()
-    plt.close()
+    return plt
 
 
 def pedestrian_plot(positions, out_path):
@@ -112,7 +110,7 @@ def create_labeled_videos():
             file_name = str(x) + '_' + str(c) + '_' + str(l) + '.csv'
 
             VIDEO_OUT = file_name[:-4] + ".mp4"
-            positions = position_read(path.join(DATA_PATH, file_name), 29.97)
+            positions = gorrini_read(path.join(DATA_PATH, file_name), 29.97)
 
             pedestrian_plot(positions, IMAGES)
 

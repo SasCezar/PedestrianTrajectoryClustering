@@ -1,7 +1,7 @@
 import unittest
 from os import path
 
-from ptcpy.ptcio.positionsio import position_read, trajectories_read
+from ptcpy.ptcio.positionsio import position_read, gorrini_read
 
 DATA_PATH = path.join(path.dirname(__file__), 'data')
 
@@ -28,7 +28,7 @@ class TestPositionsIO(unittest.TestCase):
         self.assertDictEqual(self.dict_read, self.reference_dict)
 
     def trajectories_read(self):
-        self.trajectories_read = trajectories_read(path.join(DATA_PATH, 'test_positions.csv'))
+        self.trajectories_read = gorrini_read(path.join(DATA_PATH, 'test_positions.csv'))
 
         self.assertListEqual(self.reference_trajectories, self.trajectories_read)
 

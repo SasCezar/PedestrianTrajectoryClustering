@@ -1,17 +1,9 @@
 import csv
-import os
 from abc import abstractmethod
-from itertools import chain
 
-import numpy
 from six import string_types
 
 from ptcpy.trajectory_clustering.trajectory import Trajectory
-
-
-def position_read(source, frequency=29.97):
-    result = PositionsFile(frequency).read(source)
-    return result
 
 
 def _get_pedestrian_number(positions):
@@ -25,24 +17,7 @@ def _get_pedestrian_ids(positions):
     return sorted(ids)
 
 
-def positions2matrix(source, frequency=29.97, axis=1):
-    positions = position_read(source, frequency)
-    num_sample = len(positions)
-    num_pedestrian = _get_pedestrian_number(positions)
-
-    points = numpy.zeros(shape=(num_sample, num_pedestrian))
-
-    for time in positions:
-        int_time = int(time * frequency)
-        for position in positions[time]:
-            pedestrian_id = position[0] - 1
-            point = position[axis + 2]
-            points[int_time][pedestrian_id] = point
-
-    return points
-
-
-def positions2trajectories(positions):
+def gorrini2trajectories(positions):
     trajectories = {}
     for i, time in enumerate(sorted(positions.keys())):
         for pedestrian in positions[time]:
@@ -57,29 +32,27 @@ def positions2trajectories(positions):
     return trajectories
 
 
-def postions2traclus(source, destination, frequency=29.97):
-    positions = position_read(source, frequency)
-    trajectories = positions2trajectories(positions).values()
-    num_traj = len(trajectories)
-
-    # with open(destination, "w", encoding="utf8", newline="") as outf:
-    with open(destination, "w") as outf:
-        outf.write("2")
-        outf.write(os.linesep)
-        outf.write(str(num_traj))
-        outf.write(os.linesep)
-
-        for traj in trajectories:
-            positions = [x + 500 for x in list(chain.from_iterable(traj.get_points()))]
-            line = str(traj.get_id()) + " " + str(int((len(positions) / 2)) - 1) + " " + " ".join(
-                map(str, positions)) + " "
-            outf.write(line)
-            outf.write(os.linesep)
+def gorrini_read(source, frequency=29.97):
+    positions = GorriniFile(frequency).read(source)
+    trajectory_matrix = gorrini2trajectories(positions)
+    return trajectory_matrix
 
 
-def trajectories_read(source, frequency=29.97):
-    positions = position_read(source, frequency)
-    trajectory_matrix = positions2trajectories(positions)
+def zhang2trajectories(positions):
+    trajectories = {}
+    for i, time in enumerate(sorted(positions.keys())):
+        for pedestrian in positions[time]:
+            pedestrian_id = pedestrian[0]
+            x_pos = pedestrian[1]
+            y_pos = pedestrian[2]
+            trajectories.setdefault(pedestrian_id, Trajectory(pedestrian_id)).add_point((x_pos, y_pos))
+
+    return trajectories
+
+
+def zhang_read(source, frequency=16):
+    positions = ZhangFile(frequency).read(source)
+    trajectory_matrix = gorrini2trajectories(positions)
     return trajectory_matrix
 
 
@@ -145,30 +118,8 @@ class File(object):
             if close_it:
                 stream.close()
 
-    def write(self, target, a):
-        """
 
-        :param target:
-        :param a:
-        :return:
-        """
-        stream, close_it = self._open(target, 'wb')
-
-        try:
-            self._write(stream, a)
-
-        finally:
-            if close_it:
-                stream.close()
-            else:
-                stream.flush()
-
-    @abstractmethod
-    def _write(self, stream, a):
-        pass
-
-
-class PositionsFile(File):
+class GorriniFile(File):
     def __init__(self, frequency=29.97, delimiter=','):
         self.FREQUENCY = frequency
         self.DELIMITER = delimiter
@@ -195,5 +146,29 @@ class PositionsFile(File):
             if close_it:
                 stream.close()
 
-    def _write(self, stream, points):
-        pass
+
+class ZhangFile(File):
+    def __init__(self, frequency=16, delimiter=' '):
+        self.FREQUENCY = frequency
+        self.DELIMITER = delimiter
+
+    def _read(self, source):
+        """
+        Reads the input source and generates a dictionary containing the measures grouped by time (dictionary key)
+        :param source:  str or file_name-like object containing the positions
+        :return: A dictionary
+        """
+        stream, close_it = self._open(source)
+        reader = csv.reader(stream, delimiter=self.DELIMITER)
+        result = {}
+
+        try:
+            for ped_num, frame, x, y, z in reader:
+                pedestrian = (int(ped_num), float(x), float(y), float(z))
+                result.setdefault(float(frame), []).append(pedestrian)
+
+            return result
+
+        finally:
+            if close_it:
+                stream.close()
