@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw
 from matplotlib import pyplot as plt
 from scipy.stats import gaussian_kde
 
-from ptcpy.ptcio.positionsio import gorrini_read
+from ptcpy.ptcio.positionsio import GorriniFile, ZhangFile
 
 COLORS = ["#FF0000",  # red
           "#00FF00",  # lime
@@ -28,7 +28,8 @@ def draw_trajectories(trajectories, canvas_width, canvas_height, scaling, freque
     im = Image.new("RGB", (canvas_width * scaling, canvas_height * scaling), "white")
     draw = ImageDraw.Draw(im)
     for t in trajectories:
-        t.draw_img(draw, COLORS[t.get_cluster_idx()], y_offset=y_offset, scaling=scaling, frequency=frequency)
+        t.draw_img(draw, COLORS[t.get_cluster_idx()], y_offset=y_offset, x_offset=600, scaling=scaling,
+                   frequency=frequency)
 
     return im.transpose(Image.FLIP_LEFT_RIGHT).transpose(Image.FLIP_TOP_BOTTOM)
 
@@ -65,6 +66,20 @@ def heat_map(trajectories):
 def pedestrian_plot(positions, out_path):
     matplotlib.use('Agg')
     i = 0
+
+    xs = []
+    ys = []
+    for time, pedestrians in positions.items():
+        for pedestrian in pedestrians:
+            xs += [pedestrian[2]]
+            ys += [pedestrian[3]]
+
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+
+    ax1.set_xlim(min(xs), max(xs))
+    ax1.set_ylim(min(ys), max(ys))
+
     for time in sorted(positions.keys()):
         i += 1
         print(time)
@@ -85,8 +100,6 @@ def pedestrian_plot(positions, out_path):
                 textcoords='offset points', ha='center', va='center',
                 bbox=dict(boxstyle='circle,pad=0.5', fc='yellow', alpha=1))
 
-        plt.xlim(-500, 500)
-        plt.ylim(-200, 200)
         plt.savefig(path.join(out_path, "frame_%05d.png" % int(i)))
         plt.clf()
 
@@ -100,17 +113,34 @@ def create_video(in_path, out_file, framerate):
         os.remove(file_name)
 
 
-def create_labeled_videos():
-    DATA_PATH = "c:/Users/sasce/Desktop/dataset"
-    IMAGES = "c:/Users/sasce/Desktop/dataset/video"
+def video_zhang(IMAGES):
+    DATA_PATH = "c:/Users/sasce/Desktop/dataset/zheng"
 
+    file_name = "bot-360-250-250_combined_MB.txt"
+
+    VIDEO_OUT = file_name[:-4] + ".mp4"
+    positions = ZhangFile(16).read(path.join(DATA_PATH, file_name))
+
+    pedestrian_plot(positions, IMAGES)
+
+    create_video(IMAGES, VIDEO_OUT, 16)
+
+
+def create_labeled_videos():
+    IMAGES = "c:/Users/sasce/Desktop/dataset/video"
+    # video_gorrini(IMAGES)
+    video_zhang(IMAGES)
+
+
+def video_gorrini(IMAGES):
+    DATA_PATH = "c:/Users/sasce/Desktop/dataset"
     for x in range(4, 7):
         for l in ["A", "B", "C", "D"]:
             c = 6 - x
             file_name = str(x) + '_' + str(c) + '_' + str(l) + '.csv'
 
             VIDEO_OUT = file_name[:-4] + ".mp4"
-            positions = gorrini_read(path.join(DATA_PATH, file_name), 29.97)
+            positions = GorriniFile(29.97).read(path.join(DATA_PATH, file_name))
 
             pedestrian_plot(positions, IMAGES)
 
