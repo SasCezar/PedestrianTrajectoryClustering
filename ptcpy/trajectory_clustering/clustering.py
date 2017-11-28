@@ -3,7 +3,7 @@ Created on 24. 4. 2015
 
 @author: janbednarik
 """
-
+import logging
 import math
 import random
 
@@ -172,10 +172,12 @@ class Clustering(object):
         self.trajectories = trajectories
 
         # Update a distance matrix and std deviations
+        logging.info("Computing Hausdorf distance")
         self.create_distance_matrix()
-
+        logging.info("Computing STD")
         self.create_std_devs()
 
+        logging.info("Computing affinity matrix.")
         k = self._affinity_matrix(trajectories)
 
         # Diagonal matrix w for normalization
@@ -185,6 +187,7 @@ class Clustering(object):
         l = np.dot(np.dot(w, k), w)
 
         # Eigendecomposition
+        logging.info("Computing eigendecomposition")
         eval, evec = np.linalg.eig(l)
 
         g_min, g_max = 0, 0
@@ -199,10 +202,11 @@ class Clustering(object):
         evec = np.array(evec).T
 
         g = clusters
+        logging.info("Estimating cluster numbers.")
         if g == -1:
             g = self._estimate_cluster_number(evec, g_max, g_min)
 
-        print("Number of centroids = %d" % g)
+        logging.info("Number of centroids = {}".format(g))
 
         self._kmean_cluster(trajectories, g, evec)
 

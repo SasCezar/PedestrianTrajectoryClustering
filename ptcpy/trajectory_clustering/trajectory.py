@@ -52,7 +52,7 @@ class Trajectory(object):
             y = (p[1] + y_offset) * scaling
 
             i += 1
-            if not i % frequency and self.direction:
+            if not i % frequency:
                 img.polygon([(x + (3 * self.direction), y), (x - (3 * self.direction), y - 3),
                              (x - (3 * self.direction), y + 3)], fill=color)
                 i += 1

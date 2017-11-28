@@ -1,17 +1,20 @@
+import logging
+import os
 from os import path
 
 from ptcio.positionsio import gorrini_read, zhang_read
 from ptcpy.ptcio.visualization import draw_trajectories, heat_map
 from trajectory_clustering.clustering import Clustering
 
-canvas_width = 1000
-canvas_height = 2000
+canvas_width = 2500
+canvas_height = 3500
 FREQ = 5
 
 DATA_PATH = "c:/Users/sasce/Desktop/dataset"
-ZHENG_DATA_PATH = "c:/Users/sasce/Desktop/dataset/zheng"
+ZHENG_DATA_PATH = "c:/Users/sasce/Desktop/dataset/zheng/grouped"
 GT_PATH = "c:/Users/sasce/Desktop/dataset/ground_truth"
 PERFORMANCE_PATH = "../results/performance"
+CLUSTERS_PATH = "../results/clusters"
 file_name = ""
 tkv = False
 png = True
@@ -44,14 +47,19 @@ def gorrini():
 
 
 def zhang():
-    # experiments = [f for f in os.listdir(ZHENG_DATA_PATH)]
-    # for experiment in experiments:
+    experiments = [f for f in os.listdir(ZHENG_DATA_PATH) if not os.path.isdir(f)]
+    for experiment in experiments:
+        logging.info("Working on: {}".format(experiment))
+        trajectories = zhang_read(path.join(ZHENG_DATA_PATH, experiment)).values()
 
-    experiment = "bo-360-050-050_combined_MB.txt"
+        analyze(experiment, trajectories)
 
-    trajectories = zhang_read(path.join(ZHENG_DATA_PATH, experiment)).values()
 
-    analyze(experiment, trajectories)
+def write_results(file, clusters):
+    with open(path.join(CLUSTERS_PATH, file), "wb") as fout:
+        fout.write("pedestrian, cluster\n")
+        for pedestrian in clusters:
+            fout.write("{}, {}\n".format(pedestrian, clusters[pedestrian]))
 
 
 def analyze(file_name, trajectories):
@@ -62,6 +70,8 @@ def analyze(file_name, trajectories):
     trajectories_dict = {}
     for t in trajectories:
         trajectories_dict[t.get_id()] = t.get_cluster_idx()
+
+    write_results(file_name, trajectories_dict)
     """
     ground_truth = dict(pandas.read_table(path.join(GT_PATH, file_name), sep=",").values)
     precision, recall, f1, support = get_performance_measures(trajectories_dict, ground_truth)
@@ -72,6 +82,7 @@ def analyze(file_name, trajectories):
     write_scores(file_name, scores)
     """
 
+
 def write_scores(file_name, scores):
     with open(path.join(PERFORMANCE_PATH, file_name), "wb") as fout:
         for k in scores:
@@ -79,5 +90,6 @@ def write_scores(file_name, scores):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     # gorrini()
     zhang()

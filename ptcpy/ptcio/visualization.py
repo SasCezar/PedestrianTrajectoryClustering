@@ -21,14 +21,31 @@ COLORS = ["#FF0000",  # red
           "#008080",  # teal
           "#000080",  # navy
           "#800080",  # purple
-          "#C0C0C0"]  # silver
+          "#C0C0C0",  # silver
+          "#999900",
+          "#9999FF",
+          "#FFFF00",
+          "#660000"]
 
 
 def draw_trajectories(trajectories, canvas_width, canvas_height, scaling, frequency, y_offset=250):
+    xs = []
+    ys = []
+    for trajectory in trajectories:
+        for x, y in trajectory.points:
+            xs.append(x)
+            ys.append(y)
+
+    max_height = abs(max(xs)) + abs(min(xs))
+    max_width = abs(max(ys)) + abs(min(ys))
+
     im = Image.new("RGB", (canvas_width * scaling, canvas_height * scaling), "white")
+    # im = Image.new("RGB", (max_width * scaling, max_height * scaling), "white")
     draw = ImageDraw.Draw(im)
+    x_off = - min(xs)
+    y_off = abs(min(ys))
     for t in trajectories:
-        t.draw_img(draw, COLORS[t.get_cluster_idx()], y_offset=y_offset, x_offset=600, scaling=scaling,
+        t.draw_img(draw, COLORS[t.get_cluster_idx()], y_offset=y_off, x_offset=x_off, scaling=scaling,
                    frequency=frequency)
 
     return im.transpose(Image.FLIP_LEFT_RIGHT).transpose(Image.FLIP_TOP_BOTTOM)
@@ -63,7 +80,7 @@ def heat_map(trajectories):
     return plt
 
 
-def pedestrian_plot(positions, out_path):
+def pedestrian_plot(positions, out_path, mult=1):
     matplotlib.use('Agg')
     i = 0
 
@@ -71,14 +88,14 @@ def pedestrian_plot(positions, out_path):
     ys = []
     for time, pedestrians in positions.items():
         for pedestrian in pedestrians:
-            xs += [pedestrian[2]]
+            xs += [pedestrian[2] * mult]
             ys += [pedestrian[3]]
 
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
 
-    ax1.set_xlim(min(xs), max(xs))
-    ax1.set_ylim(min(ys), max(ys))
+    min_xs, max_xs = min(xs), max(xs)
+    min_ys, max_ys = min(ys), max(ys)
 
     for time in sorted(positions.keys()):
         i += 1
@@ -87,7 +104,7 @@ def pedestrian_plot(positions, out_path):
         ys = []
         labels = []
         for pedestrian in positions[time]:
-            xs += [pedestrian[2]]
+            xs += [pedestrian[2] * mult]
             ys += [pedestrian[3]]
             labels += [pedestrian[0]]
 
@@ -97,9 +114,11 @@ def pedestrian_plot(positions, out_path):
             plt.annotate(
                 label,
                 xy=(x, y), xytext=(0, 0),
-                textcoords='offset points', ha='center', va='center',
+                textcoords='offset points', ha='center', va='center', fontsize=8,
                 bbox=dict(boxstyle='circle,pad=0.5', fc='yellow', alpha=1))
 
+        plt.xlim(min_xs, max_xs)
+        plt.ylim(min_ys, max_ys)
         plt.savefig(path.join(out_path, "frame_%05d.png" % int(i)))
         plt.clf()
 
@@ -114,16 +133,17 @@ def create_video(in_path, out_file, framerate):
 
 
 def video_zhang(IMAGES):
-    DATA_PATH = "c:/Users/sasce/Desktop/dataset/zheng"
+    DATA_PATH = "c:/Users/sasce/Desktop/dataset/zheng/grouped"
 
     file_name = "bot-360-250-250_combined_MB.txt"
+    files = [f for f in os.listdir(DATA_PATH) if not os.path.isdir(os.path.join(DATA_PATH, f))]
+    for file_name in files:
+        VIDEO_OUT = file_name[:-4] + ".mp4"
+        positions = ZhangFile(16).read(path.join(DATA_PATH, file_name))
 
-    VIDEO_OUT = file_name[:-4] + ".mp4"
-    positions = ZhangFile(16).read(path.join(DATA_PATH, file_name))
+        pedestrian_plot(positions, IMAGES, mult=-1)
 
-    pedestrian_plot(positions, IMAGES)
-
-    create_video(IMAGES, VIDEO_OUT, 16)
+        create_video(IMAGES, VIDEO_OUT, 16)
 
 
 def create_labeled_videos():
@@ -146,4 +166,6 @@ def video_gorrini(IMAGES):
 
             create_video(IMAGES, VIDEO_OUT, 29.97)
 
-# create_labeled_videos()
+
+if __name__ == "__main__":
+    create_labeled_videos()

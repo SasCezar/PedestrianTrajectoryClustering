@@ -43,9 +43,10 @@ def zhang2trajectories(positions):
     for i, time in enumerate(sorted(positions.keys())):
         for pedestrian in positions[time]:
             pedestrian_id = pedestrian[0]
+            dir = pedestrian[1]
             x_pos = pedestrian[2]
             y_pos = pedestrian[3]
-            trajectories.setdefault(pedestrian_id, Trajectory(pedestrian_id)).add_point((x_pos, y_pos))
+            trajectories.setdefault(pedestrian_id, Trajectory(pedestrian_id, direction=dir)).add_point((x_pos, y_pos))
 
     return trajectories
 
@@ -163,8 +164,8 @@ class ZhangFile(File):
         result = {}
 
         try:
-            for ped_num, frame, y, x, z in reader:
-                pedestrian = (int(ped_num), 0, float(x), float(y), float(z))
+            for ped_num, frame, ped_type, x, y, z in reader:
+                pedestrian = (int(ped_num), int(ped_type), float(x), float(y), float(z))
                 result.setdefault(float(frame), []).append(pedestrian)
 
             return result
