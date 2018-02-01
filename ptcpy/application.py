@@ -2,7 +2,10 @@ import logging
 import os
 from os import path
 
+import pandas
+
 from ptcio.positionsio import gorrini_read, zhang_read
+from ptcpy.evaluation.performance_measures import get_performance_measures, rand_score_measure
 from ptcpy.ptcio.visualization import draw_trajectories, heat_map
 from trajectory_clustering.clustering import Clustering
 
@@ -72,7 +75,7 @@ def analyze(file_name, trajectories):
         trajectories_dict[t.get_id()] = t.get_cluster_idx()
 
     write_results(file_name, trajectories_dict)
-    """
+
     ground_truth = dict(pandas.read_table(path.join(GT_PATH, file_name), sep=",").values)
     precision, recall, f1, support = get_performance_measures(trajectories_dict, ground_truth)
     rand_score = rand_score_measure(trajectories_dict, ground_truth)
@@ -80,7 +83,6 @@ def analyze(file_name, trajectories):
     scores["precision"] = precision
     scores["recall"] = recall
     write_scores(file_name, scores)
-    """
 
 
 def write_scores(file_name, scores):
@@ -91,5 +93,5 @@ def write_scores(file_name, scores):
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    # gorrini()
-    zhang()
+    gorrini()
+    # zhang()

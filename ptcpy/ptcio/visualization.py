@@ -1,3 +1,4 @@
+import csv
 import glob
 import os
 import subprocess
@@ -80,7 +81,7 @@ def heat_map(trajectories):
     return plt
 
 
-def pedestrian_plot(positions, out_path, mult=1):
+def pedestrian_plot(positions, out_path, mult=1, cluster=None):
     matplotlib.use('Agg')
     i = 0
 
@@ -115,7 +116,7 @@ def pedestrian_plot(positions, out_path, mult=1):
                 label,
                 xy=(x, y), xytext=(0, 0),
                 textcoords='offset points', ha='center', va='center', fontsize=8,
-                bbox=dict(boxstyle='circle,pad=0.5', fc='yellow', alpha=1))
+                bbox=dict(boxstyle='circle,pad=0.5', fc=COLORS[int(cluster[str(label)])], alpha=1))
 
         plt.xlim(min_xs, max_xs)
         plt.ylim(min_ys, max_ys)
@@ -132,22 +133,32 @@ def create_video(in_path, out_file, framerate):
         os.remove(file_name)
 
 
+def load_clusters(path):
+    clusters = {}
+    with open(path, "rt", encoding="utf8") as inf:
+        next(inf)
+        reader = csv.reader(inf, delimiter=",")
+        for pedestrian, cluster in reader:
+            clusters[pedestrian] = cluster
+    return clusters
+
+
 def video_zhang(IMAGES):
     DATA_PATH = "c:/Users/sasce/Desktop/dataset/zheng/grouped"
-
+    CLUSTERED_PATH = "C:\\Users\\sasce\\PycharmProjects\\PedestrianTrajectoryClustering\\results\\clusters"
     file_name = "bot-360-250-250_combined_MB.txt"
-    files = [f for f in os.listdir(DATA_PATH) if not os.path.isdir(os.path.join(DATA_PATH, f))]
+    files = [f for f in os.listdir(CLUSTERED_PATH) if not os.path.isdir(os.path.join(CLUSTERED_PATH, f))]
     for file_name in files:
         VIDEO_OUT = file_name[:-4] + ".mp4"
         positions = ZhangFile(16).read(path.join(DATA_PATH, file_name))
-
-        pedestrian_plot(positions, IMAGES, mult=-1)
+        clusters = load_clusters(path.join(CLUSTERED_PATH, file_name))
+        pedestrian_plot(positions, IMAGES, mult=-1, cluster=clusters)
 
         create_video(IMAGES, VIDEO_OUT, 16)
 
 
 def create_labeled_videos():
-    IMAGES = "c:/Users/sasce/Desktop/dataset/video"
+    IMAGES = "c:/Users/sasce/Desktop/dataset/video/clustered"
     # video_gorrini(IMAGES)
     video_zhang(IMAGES)
 

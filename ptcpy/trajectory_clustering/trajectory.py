@@ -3,8 +3,7 @@ Created on 24. 4. 2015
 
 @author: janbednarik
 """
-
-from common import euclid_dist
+from ptcpy.trajectory_clustering.common import euclid_dist
 
 
 class Trajectory(object):
