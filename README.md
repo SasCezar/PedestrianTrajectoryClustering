@@ -11,4 +11,4 @@ Pedestrian flow analysis aims to provide insight into human movement patterns in
 We presented a system for pedestrian lane recognition based on spectral clustering and  Hausdorff distance. We performed  analysis on two different dataset. The results, even if the quantitative measures were promising, showed us that a system based on whole trajectories does not give enough information on a lane. This type of analysis does not give us information onhow much a lane stays alive, how many times a lane is reformed, and so on. Our type of analysis is more suitable for static analyses such as urban and architectural planning. As future work, we aim to perform a time based clustering, and try different distance measures. Another improvement could be performed to theclustering algorithm, which actually does not make use of the direction andof the speed of a pedestrian.
 
 
-Check the [report.pdf](report.pdf) file for the full description of the project
+Check the [report.pdf](report.pdf) file for the full description of the project.
