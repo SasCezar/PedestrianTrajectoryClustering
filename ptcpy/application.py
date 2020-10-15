@@ -13,9 +13,9 @@ canvas_width = 2500
 canvas_height = 3500
 FREQ = 5
 
-DATA_PATH = "c:/Users/sasce/Desktop/dataset"
-ZHENG_DATA_PATH = "c:/Users/sasce/Desktop/dataset/zheng/grouped"
-GT_PATH = "c:/Users/sasce/Desktop/dataset/ground_truth"
+DATA_PATH = "../dataset"
+ZHENG_DATA_PATH = "../dataset/zheng/grouped"
+GT_PATH = "../dataset/ground_truth"
 PERFORMANCE_PATH = "../results/performance"
 CLUSTERS_PATH = "../results/clusters"
 file_name = ""
@@ -44,7 +44,7 @@ def gorrini():
             global file_name
             file_name = str(x) + '_' + str(c) + '_' + str(l) + '.csv'
 
-            trajectories = gorrini_read(path.join(DATA_PATH, file_name)).values()
+            trajectories = list(gorrini_read(path.join(DATA_PATH, file_name)).values())
 
             analyze(file_name, trajectories)
 
@@ -53,13 +53,13 @@ def zhang():
     experiments = [f for f in os.listdir(ZHENG_DATA_PATH) if not os.path.isdir(f)]
     for experiment in experiments:
         logging.info("Working on: {}".format(experiment))
-        trajectories = zhang_read(path.join(ZHENG_DATA_PATH, experiment)).values()
+        trajectories = list(zhang_read(path.join(ZHENG_DATA_PATH, experiment)).values())
 
         analyze(experiment, trajectories)
 
 
 def write_results(file, clusters):
-    with open(path.join(CLUSTERS_PATH, file), "wb") as fout:
+    with open(path.join(CLUSTERS_PATH, file), "wt") as fout:
         fout.write("pedestrian, cluster\n")
         for pedestrian in clusters:
             fout.write("{}, {}\n".format(pedestrian, clusters[pedestrian]))
@@ -86,7 +86,7 @@ def analyze(file_name, trajectories):
 
 
 def write_scores(file_name, scores):
-    with open(path.join(PERFORMANCE_PATH, file_name), "wb") as fout:
+    with open(path.join(PERFORMANCE_PATH, file_name), "wt") as fout:
         for k in scores:
             fout.write("{} : {}\r\n".format(k, scores[k]))
 
