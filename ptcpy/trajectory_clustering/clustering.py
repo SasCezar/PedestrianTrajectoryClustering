@@ -198,7 +198,7 @@ class Clustering(object):
                 g_min += 1
 
         # Sort eigenvalues and eigenvectors according to descending eigenvalue
-        eval, evec = zip(*sorted(zip(eval, evec.T), reverse=True))
+        eval, evec = zip(*sorted(zip(eval, evec.T), key=lambda x: -x[0]))
         evec = np.array(evec).T
 
         g = clusters
